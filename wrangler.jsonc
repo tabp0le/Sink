@@ -20,7 +20,7 @@
   "analytics_engine_datasets": [
     {
       "binding": "ANALYTICS",
-      "dataset": "sink_analytics_events"
+      "dataset": "sink"
     }
   ],
   "kv_namespaces": [
