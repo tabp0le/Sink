@@ -19,7 +19,7 @@
   },
   "analytics_engine_datasets": [
     {
-      "binding": "SINK_ANALYTICS",
+      "binding": "ANALYTICS",
       "dataset": "sink_analytics_events"
     }
   ],
