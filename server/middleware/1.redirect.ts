@@ -1,5 +1,4 @@
-import type { LinkSchema } from '@@/schemas/link'
-import type { z } from 'zod'
+import type { Link } from '@/types'
 import { parsePath, withQuery } from 'ufo'
 
 const SOCIAL_BOTS = [
@@ -20,12 +19,14 @@ const SOCIAL_BOTS = [
   'whatsapp',
 ]
 
+const APPLE_DEVICE_UA_MARKERS = ['iphone', 'ipad', 'ipod', 'crios']
+
 function isSocialBot(userAgent: string): boolean {
   const ua = userAgent.toLowerCase()
   return SOCIAL_BOTS.some(bot => ua.includes(bot))
 }
 
-function getDeviceRedirectUrl(userAgent: string, link: z.infer<typeof LinkSchema>): string | null {
+function getDeviceRedirectUrl(userAgent: string, link: Link): string | null {
   if (!link.apple && !link.google)
     return null
 
@@ -35,14 +36,14 @@ function getDeviceRedirectUrl(userAgent: string, link: z.infer<typeof LinkSchema
     return link.google
   }
 
-  if (link.apple && (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod'))) {
+  if (link.apple && APPLE_DEVICE_UA_MARKERS.some(marker => ua.includes(marker))) {
     return link.apple
   }
 
   return null
 }
 
-function hasOgConfig(link: z.infer<typeof LinkSchema>): boolean {
+function hasOgConfig(link: Link): boolean {
   return !!(link.title || link.image)
 }
 
@@ -55,23 +56,79 @@ export default eventHandler(async (event) => {
   if (event.path === '/' && homeURL)
     return sendRedirect(event, homeURL)
 
+  const { notFoundRedirect } = useRuntimeConfig(event)
+  // Bypass redirect check for notFoundRedirect path to prevent infinite loop
+  if (notFoundRedirect && event.path === notFoundRedirect) {
+    return
+  }
+
   if (slug && !reserveSlug.includes(slug) && slugRegex.test(slug) && cloudflare) {
-    const { KV } = cloudflare.env
-
-    let link: z.infer<typeof LinkSchema> | null = null
-
-    const getLink = async (key: string) =>
-      await KV.get(`link:${key}`, { type: 'json', cacheTtl: linkCacheTtl })
+    let link: Link | null = null
 
     const lowerCaseSlug = slug.toLowerCase()
-    link = await getLink(caseSensitive ? slug : lowerCaseSlug)
+    link = await getLink(event, caseSensitive ? slug : lowerCaseSlug, linkCacheTtl)
 
     if (!caseSensitive && !link && lowerCaseSlug !== slug) {
       console.log('original slug fallback:', `slug:${slug} lowerCaseSlug:${lowerCaseSlug}`)
-      link = await getLink(slug)
+      link = await getLink(event, slug, linkCacheTtl)
     }
 
     if (link) {
+      let locale: RedirectLocale | undefined
+      const getLocale = () => {
+        locale ??= resolveRedirectLocale(event)
+        return locale
+      }
+      const sendNoStoreHtml = (html: string) => {
+        setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
+        setHeader(event, 'Cache-Control', 'no-store')
+        return html
+      }
+
+      // Password protection check
+      if (link.password) {
+        const headerPassword = getHeader(event, 'x-link-password')
+
+        if (event.method === 'POST') {
+          const body = await readBody(event)
+          const submittedPassword = body?.password
+
+          if (submittedPassword !== link.password) {
+            return sendNoStoreHtml(generatePasswordHtml(slug, { hasError: true, locale: getLocale() }))
+          }
+
+          // Password correct - show unsafe warning if needed
+          if (link.unsafe && body?.confirm !== 'true') {
+            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, link.url, { password: link.password, locale: getLocale() }))
+          }
+        }
+        else if (headerPassword) {
+          if (headerPassword !== link.password) {
+            throw createError({ status: 403, statusText: 'Incorrect password' })
+          }
+          // Header-password path: check unsafe warning via x-link-confirm header
+          if (link.unsafe && getHeader(event, 'x-link-confirm') !== 'true') {
+            throw createError({ status: 403, statusText: 'Unsafe link: confirmation required (set x-link-confirm: true header)' })
+          }
+        }
+        else {
+          return sendNoStoreHtml(generatePasswordHtml(slug, { locale: getLocale() }))
+        }
+      }
+
+      // Unsafe link warning (for links without password)
+      if (!link.password && link.unsafe) {
+        if (event.method === 'POST') {
+          const body = await readBody(event)
+          if (body?.confirm !== 'true') {
+            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, link.url, { locale: getLocale() }))
+          }
+        }
+        else {
+          return sendNoStoreHtml(generateUnsafeWarningHtml(slug, link.url, { locale: getLocale() }))
+        }
+      }
+
       event.context.link = link
       try {
         await useAccessLog(event)
@@ -82,7 +139,8 @@ export default eventHandler(async (event) => {
 
       const userAgent = getHeader(event, 'user-agent') || ''
       const query = getQuery(event)
-      const buildTarget = (url: string) => redirectWithQuery ? withQuery(url, query) : url
+      const shouldRedirectWithQuery = link.redirectWithQuery ?? redirectWithQuery
+      const buildTarget = (url: string) => shouldRedirectWithQuery ? withQuery(url, query) : url
 
       const deviceRedirectUrl = getDeviceRedirectUrl(userAgent, link)
       if (deviceRedirectUrl) {
@@ -96,7 +154,22 @@ export default eventHandler(async (event) => {
         return html
       }
 
+      if (link.cloaking) {
+        const baseUrl = `${getRequestProtocol(event)}://${getRequestHost(event)}`
+        const html = generateCloakingHtml(link, buildTarget(link.url), baseUrl)
+        setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
+        setHeader(event, 'Cache-Control', 'no-store, private')
+        return html
+      }
+
       return sendRedirect(event, buildTarget(link.url), +redirectStatusCode)
+    }
+    else {
+      if (notFoundRedirect) {
+        return sendRedirect(event, notFoundRedirect, 302)
+      }
+
+      throw createError({ status: 404, statusText: 'Link not found' })
     }
   }
 })
