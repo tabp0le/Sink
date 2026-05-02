@@ -151,7 +151,7 @@
     "views": "Aufrufe",
     "visitors": "Besucher",
     "referers": "Referrer",
-    "stats": "'s Statistiken",
+    "stats": "Statistiken von {slug}",
     "trend": "Trend",
     "weekly_trend": "Wochentrend",
     "custom_date": "Benutzerdefiniertes Datum",
@@ -238,6 +238,8 @@
       "redirect_with_query_description": "Query-Parameter des Kurzlinks an die Ziel-URL anhängen. Überschreibt die globale Einstellung.",
       "cloaking_label": "Link-Cloaking aktivieren",
       "cloaking_description": "Zeigt Ihren Kurzlink in der Adressleiste des Browsers anstelle der Ziel-URL an. Funktioniert möglicherweise nicht bei Websites, die iframe-Einbettung blockieren.",
+      "unsafe_label": "Als unsicher markieren",
+      "unsafe_description": "Vor der Weiterleitung eine Warnseite anzeigen. Besucher müssen bestätigen, um fortzufahren.",
       "password_label": "Passwortschutz",
       "password_description": "Passwort zum Zugriff auf diesen Kurzlink erforderlich.",
       "password_placeholder": "Leer lassen zum Deaktivieren",
@@ -255,7 +257,19 @@
       "image_upload_failed": "Bild konnte nicht hochgeladen werden",
       "image_upload_hint": "Klicken oder ziehen zum Hochladen",
       "image_ratio_hint": "Empfohlen: 1200×630",
-      "slug_required": "Bitte zuerst einen Slug eingeben"
+      "image_preview": "Bildvorschau",
+      "slug_required": "Bitte zuerst einen Slug eingeben",
+      "utm_builder": "UTM-Builder",
+      "utm_description": "Erstelle UTM-Parameter lokal und füge sie der Ziel-URL hinzu.",
+      "utm_preview": "Vorschau",
+      "utm_source": "UTM-Quelle",
+      "utm_medium": "UTM-Medium",
+      "utm_campaign": "UTM-Kampagne",
+      "utm_term": "UTM-Begriff",
+      "utm_content": "UTM-Inhalt",
+      "utm_apply": "Anwenden",
+      "utm_clear": "Löschen",
+      "utm_invalid_url": "Gib eine gültige URL ein, um UTM-Parameter in der Vorschau zu sehen und anzuwenden."
     },
     "sort": {
       "newest": "Neueste zuerst",
@@ -269,6 +283,14 @@
     "ai_slug_failed": "KI-Slug konnte nicht generiert werden"
   },
   "migrate": {
+    "backup": {
+      "title": "Manuelles Backup",
+      "description": "Löse eine manuelle Sicherung aller Links auf dem konfigurierten R2-Bucket aus",
+      "button": "Sicherung starten",
+      "backing_up": "Sichere...",
+      "success": "Sicherung erfolgreich",
+      "failed": "Sicherung fehlgeschlagen"
+    },
     "export": {
       "title": "Links exportieren",
       "description": "Laden Sie alle Links als JSON-Datei herunter",

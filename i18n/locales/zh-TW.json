@@ -151,7 +151,7 @@
     "views": "瀏覽次數",
     "visitors": "訪客人數",
     "referers": "引薦來源",
-    "stats": "的統計",
+    "stats": "{slug} 的統計",
     "trend": "趨勢",
     "weekly_trend": "週度趨勢",
     "custom_date": "自定義日期",
@@ -238,6 +238,8 @@
       "redirect_with_query_description": "將短連結的查詢參數附加到目標 URL。優先級高於全域設定。",
       "cloaking_label": "啟用連結偽裝",
       "cloaking_description": "在瀏覽器網址列中顯示短連結而非目標 URL。部分禁止 iframe 嵌入的網站可能無法生效。",
+      "unsafe_label": "標記為不安全",
+      "unsafe_description": "跳轉前顯示警告頁面，訪客需確認後才能繼續。",
       "password_label": "密碼保護",
       "password_description": "存取此短連結時需要輸入密碼。",
       "password_placeholder": "留空則不啟用",
@@ -255,7 +257,19 @@
       "image_upload_failed": "圖片上傳失敗",
       "image_upload_hint": "點擊或拖曳上傳圖片",
       "image_ratio_hint": "建議尺寸：1200×630",
-      "slug_required": "請先輸入短連結"
+      "image_preview": "圖片預覽",
+      "slug_required": "請先輸入短連結",
+      "utm_builder": "UTM 建構器",
+      "utm_description": "在本機建構 UTM 參數並附加到目標 URL。",
+      "utm_preview": "預覽",
+      "utm_source": "UTM 來源",
+      "utm_medium": "UTM 媒介",
+      "utm_campaign": "UTM 活動",
+      "utm_term": "UTM 關鍵字",
+      "utm_content": "UTM 內容",
+      "utm_apply": "套用",
+      "utm_clear": "清除",
+      "utm_invalid_url": "請輸入有效的 URL 以預覽並套用 UTM 參數。"
     },
     "sort": {
       "newest": "最新",
@@ -269,6 +283,14 @@
     "ai_slug_failed": "AI 生成短連結失敗"
   },
   "migrate": {
+    "backup": {
+      "title": "手動備份",
+      "description": "手動觸發所有連結到已配置 R2 儲存桶的備份",
+      "button": "開始備份",
+      "backing_up": "備份中...",
+      "success": "備份成功",
+      "failed": "備份失敗"
+    },
     "export": {
       "title": "匯出連結",
       "description": "將所有連結下載為 JSON 檔案",
